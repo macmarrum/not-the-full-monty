@@ -43,7 +43,7 @@ else:
     logging.basicConfig(level=logging.INFO)
 
 
-def zipx(source: Path, archive_path: Path, kwargs: dict = None, password: bytes = None):
+def zipx(source_list: list[Path], archive_path: Path, kwargs: dict = None, password: bytes = None):
     should_skip_encryption = not kwargs and not password
     kwargs = kwargs or dict(
         encryption=pyzipper.WZ_AES,
@@ -55,7 +55,8 @@ def zipx(source: Path, archive_path: Path, kwargs: dict = None, password: bytes 
     with pyzipper.AESZipFile(archive_path, 'w', **kwargs) as zf:
         if password:
             zf.setpassword(password)
-        _add_to_zf(source, zf)
+        for source in source_list:
+            _add_to_zf(source, zf)
     logger.info(f"{archive_path} {archive_path.stat().st_size}")
 
 
@@ -89,7 +90,18 @@ def _create(args):
     password_b = password.encode(UTF8) if password else None
     if not password:
         logger.warning('empty or no password -> no encryption')
-    zipx(args.source, args.archive, password=password_b)
+    paths = [Path(elem) for elem in args.source]
+    if any(not p.exists() for p in paths):
+        paths.clear()
+        # assuming pattern(s) are given
+        for pattern in args.source:
+            for p in Path().glob(pattern):
+                paths.append(p)
+    for p in paths.copy():
+        if not p.is_file():
+            paths.remove(p)
+            logger.warning(f"skip `{p}` because it isn't a file")
+    zipx(paths, args.archive, password=password_b)
 
 
 def _extract(args):
@@ -109,7 +121,7 @@ def main():
     create_parser = subparsers.add_parser('create', aliases=['c'])
     create_parser.set_defaults(func=_create)
     create_parser.add_argument('archive', type=Path)
-    create_parser.add_argument('source', type=Path)
+    create_parser.add_argument('source', type=str, nargs='+')
     create_parser.add_argument('--password', '-p', action='store_true', help='prompt for a password')
     extract_parser = subparsers.add_parser('extract', aliases=['x'])
     extract_parser.set_defaults(func=_extract)
