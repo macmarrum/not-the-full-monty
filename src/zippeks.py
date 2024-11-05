@@ -97,10 +97,6 @@ def _create(args):
         for pattern in args.source:
             for p in Path().glob(pattern):
                 paths.append(p)
-    for p in paths.copy():
-        if not p.is_file():
-            paths.remove(p)
-            logger.warning(f"skip `{p}` because it isn't a file")
     zipx(paths, args.archive, password=password_b)
 
 
