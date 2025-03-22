@@ -57,16 +57,16 @@ def zipx(source_list: list[Path], archive_path: Path, kwargs: dict = None, passw
             zf.setpassword(password)
         for source in source_list:
             _add_to_zf(source, zf)
-    logger.info(f"{archive_path} {archive_path.stat().st_size}")
+    logger.info(f"created {archive_path} {archive_path.stat().st_size}")
 
 
 def _add_to_zf(source: Path, zf: pyzipper.ZipFile):
+    logger.info(f"add {source}")
     if source.is_dir():
         for p in source.iterdir():
             _add_to_zf(p, zf)
     else:
         zf.write(source)
-        logger.debug(f"{source}")
 
 
 def unzipx(archive_path: Path, output_dir: Path, password: bytes = None):
