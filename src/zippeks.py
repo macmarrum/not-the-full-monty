@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # zippeks - a simple zipx compressor / decompressor, with AES encryption
-# Copyright (C) 2024  macmarrum (at) outlook (dot) ie
+# Copyright (C) 2024, 2025  macmarrum (at) outlook (dot) ie
 # SPDX-License-Identifier: GPL-3.0-or-later
 import argparse
 import logging.config
@@ -61,11 +61,12 @@ def zipx(source_list: list[Path], archive_path: Path, kwargs: dict = None, passw
 
 
 def _add_to_zf(source: Path, zf: pyzipper.ZipFile):
-    zf.write(source)
-    logger.debug(f"{source}")
     if source.is_dir():
         for p in source.iterdir():
             _add_to_zf(p, zf)
+    else:
+        zf.write(source)
+        logger.debug(f"{source}")
 
 
 def unzipx(archive_path: Path, output_dir: Path, password: bytes = None):
