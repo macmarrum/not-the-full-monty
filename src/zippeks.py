@@ -52,12 +52,12 @@ def zipx(source_list: list[Path], archive_path: Path, kwargs: dict = None, passw
     )
     if should_skip_encryption:
         kwargs.pop('encryption', None)
-    with pyzipper.AESZipFile(archive_path, 'w', **kwargs) as zf:
+    with pyzipper.AESZipFile(archive_path, 'a', **kwargs) as zf:
         if password:
             zf.setpassword(password)
         for source in source_list:
             _add_to_zf(source, zf)
-    logger.info(f"created {archive_path} {archive_path.stat().st_size}")
+    logger.info(f"done: {archive_path} {archive_path.stat().st_size}")
 
 
 def _add_to_zf(source: Path, zf: pyzipper.ZipFile):
@@ -85,8 +85,7 @@ def unzipx(archive_path: Path, output_dir: Path, password: bytes = None):
 
 def _create(args):
     if args.archive.exists():
-        logger.error(f"archive exists: {args.archive}")
-        return
+        logger.info(f"updating an existing archive: {args.archive}")
     password = getpass() if args.password else conf.get('password', None)
     password_b = password.encode(UTF8) if password else None
     if not password:
